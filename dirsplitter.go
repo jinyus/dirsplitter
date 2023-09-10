@@ -18,7 +18,7 @@ func main() {
 
 	app.Command("split", "Split a directory into parts of a given size", func(cmd *cli.Cmd) {
 
-		dir := cmd.StringArg("DIR", ".", "the directory to split")
+		dir := cmd.StringArg("DIRECTORY", ".", "the directory to split")
 		max := cmd.Float64Opt("m max", 5.0, "Size of each part in GB")
 
 		cmd.Action = func() {
@@ -32,7 +32,7 @@ func main() {
 	})
 
 	app.Command("reverse", "Reverse a splitted directory", func(cmd *cli.Cmd) {
-		dir := cmd.StringArg("DIR", ".", "the directory to reverse")
+		dir := cmd.StringArg("DIRECTORY", ".", "the directory to reverse")
 
 		cmd.Action = func() {
 
