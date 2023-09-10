@@ -62,8 +62,19 @@ func SplitDir(dir string, maxSize int64) {
 		return nil
 	})
 
-	fmt.Println("\nResults:")
+	cfmt.Println("\n{{Results:}}::yellow")
 	cfmt.Printf("{{Files moved:}}::green %d\n", filesMoved)
 	cfmt.Printf("{{Skipped files in part directory:}}::cyan %d\n", skippedFiles)
-	cfmt.Printf("{{Failed operations:}}::red %d\n", failedOps)
+	cfmt.Printf("{{Failed operations:}}::red %d\n\n", failedOps)
+
+	for part, size := range tracker {
+		cfmt.Printf("{{part%d:}}::magenta %dMB\n", part, size/1024/1024)
+	}
+
+	cfmt.Println("\n{{Tar Command:}}::yellow")
+	if currentPart == 1 {
+		fmt.Printf(`tar -cf "part1.tar" "part1"; done` + "\n")
+	} else {
+		fmt.Printf(`for n in {1..%d}; do tar -cf "part$n.tar" "part$n"; done`+"\n", currentPart)
+	}
 }
