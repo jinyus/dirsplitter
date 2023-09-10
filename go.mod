@@ -10,4 +10,5 @@ require (
 require (
 	github.com/gookit/color v1.3.2 // indirect
 	github.com/i582/cfmt v1.4.0 // indirect
+	github.com/jawher/mow.cli v1.2.0 // indirect
 )

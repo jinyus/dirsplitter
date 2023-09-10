@@ -4,80 +4,67 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/akamensky/argparse"
 	"github.com/i582/cfmt/cmd/cfmt"
+	cli "github.com/jawher/mow.cli"
 	"github.com/jinyus/confirmop"
 	"github.com/jinyus/dirsplitter/commands"
 )
 
 func main() {
 
-	parser := argparse.NewParser("dirsplitter", "Split Directories")
+	app := cli.App("dirsplitter", "Split Directories")
 
-	version := parser.NewCommand("version", "prints app version")
+	app.Version("v version", "v1.0.0")
 
-	split := parser.NewCommand("split", "Split a directory into parts of a given size")
-	dirSplit := split.StringPositional(&argparse.Options{Help: "the directory to split", Default: "."})
-	max := split.Float("m", "max", &argparse.Options{Help: "Size of each part in GB", Default: 5.0})
+	app.Command("split", "Split a directory into parts of a given size", func(cmd *cli.Cmd) {
 
-	reverse := parser.NewCommand("reverse", "Reverse a splitted directory")
-	dirReverse := reverse.StringPositional(&argparse.Options{Help: "the directory to reverse", Default: "."})
+		dir := cmd.StringArg("DIR", ".", "the directory to split")
+		max := cmd.Float64Opt("m max", 5.0, "Size of each part in GB")
 
-	err := parser.Parse(os.Args)
+		cmd.Action = func() {
 
-	if err != nil {
-		fmt.Print(parser.Usage(err))
-	}
+			checkDirAndConfirmOp(dir, cfmt.Sprintf("Split \"{{%s}}::yellow\" into parts of %f GB?", *dir, *max))
 
-	if version.Happened() {
-		fmt.Println("v1.0.0")
-		os.Exit(0)
-	}
+			maxSize := *max * 1024 * 1024 * 1024
 
-	if split.Happened() {
-
-		checkDir(dirSplit)
-
-		ans := confirmop.ConfirmOperation(
-			cfmt.Sprintf("Split \"{{%s}}::yellow\" into parts of %f GB?", *dirSplit, *max),
-			"",
-			true,
-			true,
-		)
-
-		if !ans {
-			os.Exit(0)
+			commands.SplitDir(*dir, int64(maxSize))
 		}
+	})
 
-		maxSize := *max * 1024 * 1024 * 1024
+	app.Command("reverse", "Reverse a splitted directory", func(cmd *cli.Cmd) {
+		dir := cmd.StringArg("DIR", ".", "the directory to reverse")
 
-		commands.SplitDir(*dirSplit, int64(maxSize))
+		cmd.Action = func() {
 
-	} else if reverse.Happened() {
+			checkDirAndConfirmOp(dir, cfmt.Sprintf("Reverse split \"{{%s}}::yellow\"?", *dir))
 
-		checkDir(dirReverse)
-
-		ans := confirmop.ConfirmOperation(
-			cfmt.Sprintf("Reverse split \"{{%s}}::yellow\"?", *dirReverse),
-			"",
-			true,
-			true,
-		)
-
-		if !ans {
-			os.Exit(0)
+			commands.ReverseSplitDir(*dir)
 		}
+	})
 
-		commands.ReverseSplitDir(*dirReverse)
-	}
-
-	os.Exit(0)
+	app.Run(os.Args)
 }
 
-func checkDir(dirSplit *string) {
-	info, err := os.Stat(*dirSplit)
+func checkDir(dir *string) {
+	info, err := os.Stat(*dir)
 	if err != nil || !info.IsDir() {
-		cfmt.Printf("{{Error:}}::red '%s' is not a directory\n", *dirSplit)
+		cfmt.Printf("{{Error:}}::red '%s' is not a directory\n", *dir)
 		os.Exit(1)
+	}
+}
+
+func checkDirAndConfirmOp(dir *string, desc string) {
+	checkDir(dir)
+
+	ans := confirmop.ConfirmOperation(
+		desc,
+		"",
+		true,
+		true,
+	)
+
+	if !ans {
+		fmt.Println("Operation cancelled")
+		os.Exit(0)
 	}
 }
