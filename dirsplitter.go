@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/i582/cfmt/cmd/cfmt"
 	cli "github.com/jawher/mow.cli"
-	"github.com/jinyus/confirmop"
 	"github.com/jinyus/dirsplitter/commands"
 )
 
@@ -43,28 +41,4 @@ func main() {
 	})
 
 	app.Run(os.Args)
-}
-
-func checkDir(dir *string) {
-	info, err := os.Stat(*dir)
-	if err != nil || !info.IsDir() {
-		cfmt.Printf("{{Error:}}::red '%s' is not a directory\n", *dir)
-		os.Exit(1)
-	}
-}
-
-func checkDirAndConfirmOp(dir *string, desc string) {
-	checkDir(dir)
-
-	ans := confirmop.ConfirmOperation(
-		desc,
-		"",
-		true,
-		true,
-	)
-
-	if !ans {
-		fmt.Println("Operation cancelled")
-		os.Exit(0)
-	}
 }
